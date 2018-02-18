@@ -11,8 +11,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   
   func applicationDidFinishLaunching(_ aNotification: Notification) {
     if let screenSaverView = screenSaverView {
-      screenSaverView.frame = window.contentView!.bounds;
-      window.contentView!.addSubview(screenSaverView);
+      let content = window.contentView!;
+      screenSaverView.autoresizingMask = [.width, .height]
+      screenSaverView.autoresizesSubviews = true
+      screenSaverView.frame = content.bounds;
+      content.addSubview(screenSaverView);
     }
   }
   
@@ -23,6 +26,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
     return true
   }
-  
 }
 

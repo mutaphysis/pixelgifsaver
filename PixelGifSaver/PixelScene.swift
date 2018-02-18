@@ -63,8 +63,7 @@ class PixelScene {
   
   static private func prepareScene() -> SKScene {
     let scene = SKScene.init()
-    
-    scene.scaleMode = .aspectFit
+    scene.scaleMode = .aspectFill
     scene.backgroundColor = SKColor.green
     
     return scene
@@ -72,6 +71,9 @@ class PixelScene {
   
   init?(bounds: NSRect) {
     self.view = SKView.init(frame: bounds)
+    self.view.autoresizingMask = [.width, .height]
+    self.view.autoresizesSubviews = true
+    
     self.scene = PixelScene.prepareScene()
     
     self.view.showsFPS = true
