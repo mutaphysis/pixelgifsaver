@@ -24,6 +24,7 @@ extension SKAction {
 }
 
 let DurationPerAnimation = 10.0;
+let CrossFadeDuration = 1.0;
 
 class PixelScene {
   public let view: SKView
@@ -32,17 +33,26 @@ class PixelScene {
   
   private var currentAnimation: SKSpriteNode? = nil
   private var currentIndex = 0;
+  private var isLoadingGif = false;
   
   private func putAnimatedGif(url: URL) {
+    if isLoadingGif { return }
+    
+    isLoadingGif = true
     let background = DispatchQueue.global();
     background.async {
       // load new gif
-      let gifResource = GifImage(url: url)!
+      let gifResource = GifImage(url: url)
       
       DispatchQueue.main.async {
+        if (gifResource == nil) {
+          self.isLoadingGif = false
+          self.nextGif()
+          return;
+        }
         
         // figure out how it fits best
-        let aspectRatio = gifResource.size.width / gifResource.size.height;
+        let aspectRatio = gifResource!.size.width / gifResource!.size.height;
         let direction = (aspectRatio > 1.0) ? AnimationDirection.horizontal : AnimationDirection.vertical
         
         // determine size and movement
@@ -65,12 +75,25 @@ class PixelScene {
         scene.addChild(gifNode)
         
         // setup all animations on the node
-        let oscillate = SKAction.oscillation(direction: direction,
-                                             amplitude: overlap/2,
-                                             timePeriod: 10.0,
-                                             midPoint: gifNode.position)
-        gifNode.run(SKAction.repeatForever(oscillate))
-        gifNode.run(SKAction.repeatForever(gifResource.animation()))
+        
+        // move
+        gifNode.run(SKAction.repeatForever(SKAction.oscillation(direction: direction,
+                                                                amplitude: overlap/2,
+                                                                timePeriod: 10.0,
+                                                                midPoint: gifNode.position)))
+        // switch through gif frame
+        gifNode.run(SKAction.repeatForever(gifResource!.animation()))
+        // fade in
+        gifNode.alpha = 0.0
+        gifNode.run(SKAction.fadeIn(withDuration: CrossFadeDuration))
+        
+        if self.currentAnimation != nil {
+          self.currentAnimation?.run(SKAction.sequence([
+            SKAction.fadeOut(withDuration: CrossFadeDuration),
+            SKAction.removeFromParent()]))
+        }
+        self.currentAnimation = gifNode
+        self.isLoadingGif = false
       }
     }
   }
