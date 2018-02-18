@@ -39,7 +39,7 @@ class GifImage {
       let cfFrameProperties = CGImageSourceCopyPropertiesAtIndex(src, i, nil)
       guard let framePrpoerties = cfFrameProperties as? [String:AnyObject] else {return nil}
       guard let gifProperties = framePrpoerties[kCGImagePropertyGIFDictionary as String] as? [String:AnyObject] else {
-        print("Failed collecting gif data for \(i)")
+        print("Failed collecting gif data for frame \(i) in \(url)")
         return nil
       }
       

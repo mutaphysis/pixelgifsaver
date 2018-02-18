@@ -55,25 +55,28 @@ class PixelScene {
         // figure out how it fits best
         let aspectRatio = gifResource!.size.width / gifResource!.size.height;
         let direction = (aspectRatio > 1.0) ? AnimationDirection.horizontal : AnimationDirection.vertical
+        let sceneSize = self.scene.size
         
         // determine size and movement
         var rectangleSize: CGSize
         var overlap: CGFloat
         switch direction {
         case .horizontal:
-          rectangleSize = CGSize(width: 1.0 * aspectRatio, height: 1.0)
-          overlap = rectangleSize.width - 1.0
+          rectangleSize = CGSize(width: sceneSize.width * aspectRatio, height: sceneSize.height)
+          overlap = rectangleSize.width - sceneSize.width
         case .vertical:
-          rectangleSize = CGSize(width: 1.0, height: 1.0 / aspectRatio)
-          overlap = rectangleSize.height - 1.0
+          rectangleSize = CGSize(width: sceneSize.width, height: sceneSize.height / aspectRatio)
+          overlap = rectangleSize.height - sceneSize.height
         }
         
         // insert to scene
         let scene = self.scene
         let gifNode = SKSpriteNode(color: SKColor.red, size: rectangleSize)
         gifNode.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        gifNode.position = CGPoint(x: 0.5, y: 0.5)
+        gifNode.position = CGPoint(x: sceneSize.width/2, y: sceneSize.height/2)
         scene.addChild(gifNode)
+        
+        print("placing node scene:\(sceneSize) node:\(rectangleSize) overlap:\(overlap) gif:\(gifResource!.size) aspect:\(aspectRatio) ")
         
         // setup all animations on the node
         
@@ -110,7 +113,7 @@ class PixelScene {
   
   static private func prepareScene() -> SKScene {
     let scene = SKScene.init()
-    scene.scaleMode = .aspectFill
+    scene.scaleMode = .resizeFill
     scene.backgroundColor = SKColor.black
     
     return scene
@@ -119,9 +122,10 @@ class PixelScene {
   func nextGif() {
     let nextIndex = (currentIndex + 1) % urls.count
     
-    if (urls.count > 0) {
+    if (nextIndex < urls.count) {
       if self.putAnimatedGif(url: urls[nextIndex]) {
         currentIndex = nextIndex
+        print("Switching to next gif \(urls[nextIndex])")
       }
     }
   }
