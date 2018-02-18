@@ -1,19 +1,29 @@
 import ScreenSaver
 import SpriteKit
 
+enum AnimationDirection {
+  case vertical
+  case horizontal
+}
+
 extension SKAction {
-  // amplitude  - the amount the height will vary by, set this to 200 in your case.
+  // amplitude  - the amount the height will vary by
   // timePeriod - the time it takes for one complete cycle
   // midPoint   - the point around which the oscillation occurs.
-  static func oscillation(amplitude a: CGFloat, timePeriod t: Double, midPoint: CGPoint) -> SKAction {
+  static func oscillation(direction: AnimationDirection, amplitude a: CGFloat, timePeriod t: Double, midPoint: CGPoint) -> SKAction {
     let action = SKAction.customAction(withDuration: t) { node, currentTime in
       let displacement = a * sin(2 * .pi * currentTime / CGFloat(t))
-      node.position.y = midPoint.y + displacement
+      if (direction == .vertical) {
+        node.position.y = midPoint.y + displacement
+      } else {
+        node.position.x = midPoint.x + displacement
+      }
     }
-    
     return action
   }
 }
+
+let DurationPerAnimation = 10.0;
 
 class PixelScene {
   public let view: SKView
@@ -21,19 +31,34 @@ class PixelScene {
   
   private func putAnimatedGif(url: URL) {
     let gifResource = GifImage(url: url)!
-
-    let rectangle = SKSpriteNode(color: SKColor.red, size: CGSize(width: 0.5, height: 0.5))
-    rectangle.anchorPoint = CGPoint(x: 0, y: 0)
-    rectangle.position = CGPoint(x: 0.25, y: 0.25)
+    
+    let aspectRatio = gifResource.size.width / gifResource.size.height;
+    let direction = (aspectRatio > 1.0) ? AnimationDirection.horizontal : AnimationDirection.vertical
+    
+    var rectangleSize: CGSize
+    var overlap: CGFloat
+    switch direction {
+      case .horizontal:
+        rectangleSize = CGSize(width: 1.0 * aspectRatio, height: 1.0)
+        overlap = rectangleSize.width - 1.0
+      case .vertical:
+        rectangleSize = CGSize(width: 1.0, height: 1.0 / aspectRatio)
+      overlap = rectangleSize.height - 1.0
+    }
+    let rectangle = SKSpriteNode(color: SKColor.red, size: rectangleSize)
+    rectangle.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+    rectangle.position = CGPoint(x: 0.5, y: 0.5)
     
     let scene = self.scene
     scene.addChild(rectangle)
     
-    let oscillate = SKAction.oscillation(amplitude: 0.5,
-                                         timePeriod: 3,
+    let oscillate = SKAction.oscillation(direction: direction,
+                                         amplitude: overlap/2,
+                                         timePeriod: 10.0,
                                          midPoint: rectangle.position)
     rectangle.run(SKAction.repeatForever(oscillate))
     rectangle.run(SKAction.repeatForever(gifResource.animation()))
+    // rectangle.run(SKAction.sequence([SKAction.wait(forDuration: DurationPerAnimation), SKAction.removeFromParent()]))
   }
   
   static private func prepareScene() -> SKScene {
