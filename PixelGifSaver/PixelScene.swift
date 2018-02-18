@@ -28,13 +28,20 @@ let DurationPerAnimation = 10.0;
 class PixelScene {
   public let view: SKView
   private let scene: SKScene
+  private let urls: [URL]
   
-  private func putAnimatedGif(url: URL) {
+  private var currentAnimation: SKSpriteNode? = nil
+  private var currentIndex = 0;
+  
+  private func putAnimatedGif(url: URL) -> SKSpriteNode {
+    // load new gif
     let gifResource = GifImage(url: url)!
     
+    // figure out how it fits best
     let aspectRatio = gifResource.size.width / gifResource.size.height;
     let direction = (aspectRatio > 1.0) ? AnimationDirection.horizontal : AnimationDirection.vertical
     
+    // determine size and movement
     var rectangleSize: CGSize
     var overlap: CGFloat
     switch direction {
@@ -45,20 +52,25 @@ class PixelScene {
         rectangleSize = CGSize(width: 1.0, height: 1.0 / aspectRatio)
       overlap = rectangleSize.height - 1.0
     }
-    let rectangle = SKSpriteNode(color: SKColor.red, size: rectangleSize)
-    rectangle.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-    rectangle.position = CGPoint(x: 0.5, y: 0.5)
     
+    // insert to scene
     let scene = self.scene
-    scene.addChild(rectangle)
+    let gifNode = SKSpriteNode(color: SKColor.red, size: rectangleSize)
+    gifNode.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+    gifNode.position = CGPoint(x: 0.5, y: 0.5)
+    scene.addChild(gifNode)
     
+    // setup all animations on the node
     let oscillate = SKAction.oscillation(direction: direction,
                                          amplitude: overlap/2,
                                          timePeriod: 10.0,
-                                         midPoint: rectangle.position)
-    rectangle.run(SKAction.repeatForever(oscillate))
-    rectangle.run(SKAction.repeatForever(gifResource.animation()))
-    // rectangle.run(SKAction.sequence([SKAction.wait(forDuration: DurationPerAnimation), SKAction.removeFromParent()]))
+                                         midPoint: gifNode.position)
+    gifNode.run(SKAction.repeatForever(oscillate))
+    gifNode.run(SKAction.repeatForever(gifResource.animation()))
+    
+    
+    
+    return gifNode
   }
   
   static private func prepareScene() -> SKScene {
@@ -69,7 +81,18 @@ class PixelScene {
     return scene
   }
   
+  func nextGif() {
+    currentIndex = (currentIndex + 1) % urls.count
+    
+    if (urls.count > 0) {
+      self.currentAnimation = self.putAnimatedGif(url: urls[currentIndex])
+      // self.scene.run(<#T##action: SKAction##SKAction#>)
+    }
+  }
+  
   init?(bounds: NSRect, urls: [URL]) {
+    self.urls = urls
+    
     self.view = SKView.init(frame: bounds)
     self.view.autoresizingMask = [.width, .height]
     self.view.autoresizesSubviews = true
@@ -77,11 +100,10 @@ class PixelScene {
     self.scene = PixelScene.prepareScene()
     
     self.view.showsFPS = true
-
-    self.view.presentScene(self.scene)    
-    if (urls.count > 0) {
-      self.putAnimatedGif(url: urls.first!)
-    }
+    self.view.presentScene(self.scene)
+    
+    // start first animation
+    self.nextGif()
   }
 }
 

@@ -15,8 +15,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       screenSaverView.autoresizingMask = [.width, .height]
       screenSaverView.autoresizesSubviews = true
       screenSaverView.frame = content.bounds;
+      
+      NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+        self.keyDown(with: $0)
+        return $0
+      }
+      
       content.addSubview(screenSaverView);
     }
+  }
+  
+  func keyDown(with event: NSEvent) {
+     self.screenSaverView?.pixelScene.nextGif()
   }
   
   func applicationWillTerminate(_ aNotification: Notification) {

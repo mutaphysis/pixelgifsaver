@@ -2,7 +2,7 @@ import ScreenSaver
 
 @objc
 class PixelGifSaver: ScreenSaverView {
-  private var pixelScene: PixelScene!;
+  public private(set) var pixelScene: PixelScene!;
   private var gifFileUrls: [URL]!;
   
   override init?(frame: NSRect, isPreview: Bool) {
@@ -10,9 +10,7 @@ class PixelGifSaver: ScreenSaverView {
     
     let gifFileUrls = PixelGifSaver.collectGifsFromDirectory(directory: "/Users/loplop/Dropbox/stuff/Pixel Scenes/")
     self.pixelScene = PixelScene(bounds: frame, urls: gifFileUrls)!
-    self.addSubview(pixelScene.view)
-    
-    
+    self.addSubview(pixelScene.view)    
   }  
   
   required init?(coder: NSCoder) {
