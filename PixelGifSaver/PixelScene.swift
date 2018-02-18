@@ -26,12 +26,11 @@ extension SKAction {
 let DurationPerAnimation = 10.0;
 let CrossFadeDuration = 1.0;
 
-class PixelScene {
-  public let view: SKView
-  private let scene: SKScene
+class PixelScene : SKView {
   private let urls: [URL]
   
-  private var currentAnimation: SKSpriteNode? = nil
+  private var currentAnimationNode: SKSpriteNode? = nil
+  private var currentAspectRatio: CGFloat? = nil
   private var currentIndex = 0;
   private var isLoadingGif = false;
   
@@ -46,45 +45,27 @@ class PixelScene {
       
       DispatchQueue.main.async {
         // loading the gif failed
-        if (gifResource == nil) {
+        if (gifResource == nil || self.scene == nil) {
           self.isLoadingGif = false
           self.nextGif()
           return;
         }
         
-        // figure out how it fits best
-        let aspectRatio = gifResource!.size.width / gifResource!.size.height;
-        let direction = (aspectRatio > 1.0) ? AnimationDirection.horizontal : AnimationDirection.vertical
-        let sceneSize = self.scene.size
+        let pixelScene = self.scene!
         
-        // determine size and movement
-        var rectangleSize: CGSize
-        var overlap: CGFloat
-        switch direction {
-        case .horizontal:
-          rectangleSize = CGSize(width: sceneSize.width * aspectRatio, height: sceneSize.height)
-          overlap = rectangleSize.width - sceneSize.width
-        case .vertical:
-          rectangleSize = CGSize(width: sceneSize.width, height: sceneSize.height / aspectRatio)
-          overlap = rectangleSize.height - sceneSize.height
-        }
+        self.currentAspectRatio = gifResource!.size.width / gifResource!.size.height
         
         // insert to scene
-        let scene = self.scene
-        let gifNode = SKSpriteNode(color: SKColor.red, size: rectangleSize)
+        let gifNode = SKSpriteNode(color: SKColor.red,
+                                   size: CGSize(width: gifResource!.size.width, height: gifResource!.size.height))
         gifNode.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        gifNode.position = CGPoint(x: sceneSize.width/2, y: sceneSize.height/2)
-        scene.addChild(gifNode)
+        pixelScene.addChild(gifNode)
         
-        print("placing node scene:\(sceneSize) node:\(rectangleSize) overlap:\(overlap) gif:\(gifResource!.size) aspect:\(aspectRatio) ")
+        // set size and scroll anim
+        self.resizeNode(node: gifNode)
         
         // setup all animations on the node
         
-        // move
-        gifNode.run(SKAction.repeatForever(SKAction.oscillation(direction: direction,
-                                                                amplitude: overlap/2,
-                                                                timePeriod: 10.0,
-                                                                midPoint: gifNode.position)))
         // switch through gif frame
         gifNode.run(SKAction.repeatForever(gifResource!.animation()))
         // fade in
@@ -92,15 +73,15 @@ class PixelScene {
         gifNode.run(SKAction.fadeIn(withDuration: CrossFadeDuration))
         
         // remove existing node
-        if self.currentAnimation != nil {
-          self.currentAnimation?.run(SKAction.sequence([
+        if self.currentAnimationNode != nil {
+          self.currentAnimationNode?.run(SKAction.sequence([
             SKAction.fadeOut(withDuration: CrossFadeDuration),
             SKAction.removeFromParent()]))
         }
-        self.currentAnimation = gifNode
+        self.currentAnimationNode = gifNode
         self.isLoadingGif = false
         
-        self.scene.run(SKAction.customAction(withDuration: DurationPerAnimation, actionBlock: { _, time in
+        pixelScene.run(SKAction.customAction(withDuration: DurationPerAnimation, actionBlock: { _, time in
           if (Double(time) >= DurationPerAnimation) {
             self.nextGif();
           }
@@ -111,12 +92,46 @@ class PixelScene {
     return true
   }
   
-  static private func prepareScene() -> SKScene {
-    let scene = SKScene.init()
-    scene.scaleMode = .resizeFill
-    scene.backgroundColor = SKColor.black
+  override func resize(withOldSuperviewSize oldSize: NSSize) {
+    super.resize(withOldSuperviewSize: oldSize)
     
-    return scene
+    if (self.currentAnimationNode != nil) {
+      resizeNode(node: self.currentAnimationNode!)
+    }
+  }
+  
+  func resizeNode(node: SKSpriteNode) {
+    let pixelScene = self.scene!
+    
+    // figure out how it fits best
+    let aspectRatio = self.currentAspectRatio!
+    let direction = (aspectRatio > 1.0) ? AnimationDirection.horizontal : AnimationDirection.vertical
+    let sceneSize = pixelScene.size
+    
+    // determine size and movement
+    var rectangleSize: CGSize
+    var overlap: CGFloat
+    switch direction {
+    case .horizontal:
+      rectangleSize = CGSize(width: sceneSize.width * aspectRatio, height: sceneSize.height)
+      overlap = rectangleSize.width - sceneSize.width
+    case .vertical:
+      rectangleSize = CGSize(width: sceneSize.width, height: sceneSize.height / aspectRatio)
+      overlap = rectangleSize.height - sceneSize.height
+    }
+    
+    node.size = rectangleSize
+    node.position = CGPoint(x: sceneSize.width/2, y: sceneSize.height/2)
+    
+    print("placing node scene:\(sceneSize) node:\(rectangleSize) overlap:\(overlap) aspect:\(aspectRatio) ")
+    
+    node.removeAction(forKey: "oscillate")
+    node.run(SKAction.repeatForever(
+      SKAction.oscillation(direction: direction,
+                           amplitude: overlap/2,
+                           timePeriod: 10.0,
+                           midPoint: node.position)),
+                withKey: "oscillate")
   }
   
   func nextGif() {
@@ -133,17 +148,24 @@ class PixelScene {
   init?(bounds: NSRect, urls: [URL]) {
     self.urls = urls
     
-    self.view = SKView.init(frame: bounds)
-    self.view.autoresizingMask = [.width, .height]
-    self.view.autoresizesSubviews = true
+    super.init(frame: bounds)
+    self.autoresizingMask = [.width, .height]
+    self.autoresizesSubviews = true
     
-    self.scene = PixelScene.prepareScene()
+    let pixelScene = SKScene.init()
+    pixelScene.scaleMode = .resizeFill
+    pixelScene.backgroundColor = SKColor.black
     
-    self.view.showsFPS = true
-    self.view.presentScene(self.scene)
+    self.showsFPS = true
+    self.presentScene(pixelScene)
     
     // start first animation
     self.nextGif()
+  }
+  
+  required init?(coder decoder: NSCoder) {
+    self.urls = []
+    super.init(coder: decoder)
   }
 }
 
