@@ -1,33 +1,59 @@
 import ScreenSaver
-import SceneKit
+import SpriteKit
+
+extension SKAction {
+  // amplitude  - the amount the height will vary by, set this to 200 in your case.
+  // timePeriod - the time it takes for one complete cycle
+  // midPoint   - the point around which the oscillation occurs.
+  static func oscillation(amplitude a: CGFloat, timePeriod t: Double, midPoint: CGPoint) -> SKAction {
+    let action = SKAction.customAction(withDuration: t) { node, currentTime in
+      let displacement = a * sin(2 * .pi * currentTime / CGFloat(t))
+      node.position.y = midPoint.y + displacement
+    }
+    
+    return action
+  }
+}
 
 class PixelScene {
-  var scnView: SCNView!
+  public let view: SKView
+  private let scene: SKScene
   
-  func putAnimatedGif() {
-    let plane = SCNPlane(width: 2, height: 2)
+  private func putAnimatedGif(url: URL) {
+    // let animation : CAKeyframeAnimation = GifLoader.loadGifAnimation(url: url)!
+
+    let rectangle = SKSpriteNode(color: SKColor.red, size: CGSize(width: 0.5, height: 0.5))
+    rectangle.anchorPoint = CGPoint(x: 0, y: 0)
+    rectangle.position = CGPoint(x: 0.25, y: 0.25)
     
-    let bundleURL = Bundle.main.url(forResource: "engine", withExtension: "gif")
-    let animation : CAKeyframeAnimation = GifLoader.loadGifAnimation(url: bundleURL!)!
+    let scene = self.scene
+    scene.addChild(rectangle)
     
-    let layer = CALayer()
-    layer.bounds = CGRect(x: 0, y: 0, width: 900, height: 900)
+    let oscillate = SKAction.oscillation(amplitude: 0.5,
+                                         timePeriod: 3,
+                                         midPoint: rectangle.position)
+    rectangle.run(SKAction.repeatForever(oscillate))
   }
   
-  func prepareSceneKitView(bounds: NSRect) {
-    // openGL seems to perform much better on SS + SceneKit.  On multiple monitors this was causing fans to kick in using default ( Metal )
-    _ = [SCNView.Option.preferredRenderingAPI: SCNRenderingAPI.openGLCore32.rawValue]
+  static private func prepareScene() -> SKScene {
+    let scene = SKScene.init()
     
-    let scnView = SCNView.init(frame: bounds, options: nil)
-    scnView.showsStatistics = true
-    scnView.antialiasingMode = .none
-    scnView.backgroundColor = NSColor.green
+    scene.scaleMode = .aspectFit
+    scene.backgroundColor = SKColor.green
     
-    self.scnView = scnView;
+    return scene
   }
   
   init?(bounds: NSRect) {
-    prepareSceneKitView(bounds: bounds)
+    self.view = SKView.init(frame: bounds)
+    self.scene = PixelScene.prepareScene()
+    
+    self.view.showsFPS = true
+
+    self.view.presentScene(self.scene)
+    
+    let fileUrl = Foundation.URL(fileURLWithPath: "/Users/loplop/Dropbox/stuff/Pixel Scenes/fb4926b3f11054e881ba8f0edf29daa8.gif")
+    self.putAnimatedGif(url: fileUrl)
   }
 }
 

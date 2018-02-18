@@ -11,7 +11,7 @@ class PixelGifSaver: ScreenSaverView {
     }
     
     pixelScene = PixelScene(bounds: frame)
-    self.addSubview(pixelScene.scnView)
+    self.addSubview(pixelScene.view)
   }  
   
   required init?(coder: NSCoder) {
