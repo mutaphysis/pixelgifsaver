@@ -35,8 +35,8 @@ class PixelScene {
   private var currentIndex = 0;
   private var isLoadingGif = false;
   
-  private func putAnimatedGif(url: URL) {
-    if isLoadingGif { return }
+  private func putAnimatedGif(url: URL) -> Bool {
+    if isLoadingGif { return false }
     
     isLoadingGif = true
     let background = DispatchQueue.global();
@@ -45,6 +45,7 @@ class PixelScene {
       let gifResource = GifImage(url: url)
       
       DispatchQueue.main.async {
+        // loading the gif failed
         if (gifResource == nil) {
           self.isLoadingGif = false
           self.nextGif()
@@ -87,6 +88,7 @@ class PixelScene {
         gifNode.alpha = 0.0
         gifNode.run(SKAction.fadeIn(withDuration: CrossFadeDuration))
         
+        // remove existing node
         if self.currentAnimation != nil {
           self.currentAnimation?.run(SKAction.sequence([
             SKAction.fadeOut(withDuration: CrossFadeDuration),
@@ -94,8 +96,16 @@ class PixelScene {
         }
         self.currentAnimation = gifNode
         self.isLoadingGif = false
+        
+        self.scene.run(SKAction.customAction(withDuration: DurationPerAnimation, actionBlock: { _, time in
+          if (Double(time) >= DurationPerAnimation) {
+            self.nextGif();
+          }
+        }))
       }
     }
+    
+    return true
   }
   
   static private func prepareScene() -> SKScene {
@@ -107,11 +117,12 @@ class PixelScene {
   }
   
   func nextGif() {
-    currentIndex = (currentIndex + 1) % urls.count
+    let nextIndex = (currentIndex + 1) % urls.count
     
     if (urls.count > 0) {
-      self.putAnimatedGif(url: urls[currentIndex])
-      // self.scene.run(<#T##action: SKAction##SKAction#>)
+      if self.putAnimatedGif(url: urls[nextIndex]) {
+        currentIndex = nextIndex
+      }
     }
   }
   

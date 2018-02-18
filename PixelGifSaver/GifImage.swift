@@ -12,6 +12,7 @@ class GifImage {
       actions.append(SKAction.setTexture(textures[i]))
       actions.append(SKAction.wait(forDuration: frameDurations[i]))
     }
+
     return SKAction.sequence(actions);
   }
   
