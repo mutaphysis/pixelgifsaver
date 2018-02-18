@@ -20,7 +20,7 @@ class PixelScene {
   private let scene: SKScene
   
   private func putAnimatedGif(url: URL) {
-    // let animation : CAKeyframeAnimation = GifLoader.loadGifAnimation(url: url)!
+    let gifResource = GifImage(url: url)!
 
     let rectangle = SKSpriteNode(color: SKColor.red, size: CGSize(width: 0.5, height: 0.5))
     rectangle.anchorPoint = CGPoint(x: 0, y: 0)
@@ -33,6 +33,7 @@ class PixelScene {
                                          timePeriod: 3,
                                          midPoint: rectangle.position)
     rectangle.run(SKAction.repeatForever(oscillate))
+    rectangle.run(SKAction.repeatForever(gifResource.animation()))
   }
   
   static private func prepareScene() -> SKScene {
