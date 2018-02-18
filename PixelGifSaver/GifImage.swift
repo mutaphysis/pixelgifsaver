@@ -60,7 +60,10 @@ class GifImage {
       // collect frames
       if let frame = CGImageSourceCreateImageAtIndex(src, i, nil) {
         tmpDurations.append(TimeInterval(frameDuration))
-        tmpTextures.append(SKTexture(cgImage: frame))
+        let texture = SKTexture(cgImage: frame)
+        // ensure scaling does not blur
+        texture.filteringMode = .nearest
+        tmpTextures.append(texture)
       } else {
         print("Failed collecting texture for frame \(i)")
         return nil;
