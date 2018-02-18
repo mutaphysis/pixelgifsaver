@@ -69,7 +69,7 @@ class PixelScene {
     return scene
   }
   
-  init?(bounds: NSRect) {
+  init?(bounds: NSRect, urls: [URL]) {
     self.view = SKView.init(frame: bounds)
     self.view.autoresizingMask = [.width, .height]
     self.view.autoresizesSubviews = true
@@ -78,10 +78,10 @@ class PixelScene {
     
     self.view.showsFPS = true
 
-    self.view.presentScene(self.scene)
-    
-    let fileUrl = Foundation.URL(fileURLWithPath: "/Users/loplop/Dropbox/stuff/Pixel Scenes/fb4926b3f11054e881ba8f0edf29daa8.gif")
-    self.putAnimatedGif(url: fileUrl)
+    self.view.presentScene(self.scene)    
+    if (urls.count > 0) {
+      self.putAnimatedGif(url: urls.first!)
+    }
   }
 }
 

@@ -2,19 +2,40 @@ import ScreenSaver
 
 @objc
 class PixelGifSaver: ScreenSaverView {
-  var pixelScene: PixelScene!;
+  private var pixelScene: PixelScene!;
+  private var gifFileUrls: [URL]!;
   
   override init?(frame: NSRect, isPreview: Bool) {
     super.init(frame: frame, isPreview: isPreview)
-    for subview in self.subviews {
-      subview.removeFromSuperview()
-    }
     
-    pixelScene = PixelScene(bounds: frame)
+    let gifFileUrls = PixelGifSaver.collectGifsFromDirectory(directory: "/Users/loplop/Dropbox/stuff/Pixel Scenes/")
+    self.pixelScene = PixelScene(bounds: frame, urls: gifFileUrls)!
     self.addSubview(pixelScene.view)
+    
+    
   }  
   
   required init?(coder: NSCoder) {
     super.init(coder: coder)
+    
+    let gifFileUrls = PixelGifSaver.collectGifsFromDirectory(directory: "/Users/loplop/Dropbox/stuff/Pixel Scenes/")
+    self.pixelScene = PixelScene(bounds: frame, urls: gifFileUrls)!
+    self.addSubview(pixelScene.view)
+  }
+  
+  static func collectGifsFromDirectory(directory: String) -> [URL] {
+    let rootUrl = URL.init(fileURLWithPath: directory);
+    let enumerator = FileManager.default.enumerator(atPath: directory)
+    let relativeFilePaths = enumerator?.allObjects as! [String]
+    let gifAnimationFiles = relativeFilePaths.filter{$0.lowercased().hasSuffix(".gif")}
+    
+    var absoluteUrls = gifAnimationFiles.map { (file: String) -> URL in
+      var path = rootUrl;
+      path.appendPathComponent(file)
+      return path
+    }
+    
+    absoluteUrls.shuffleInPlace()
+    return absoluteUrls
   }
 }
