@@ -23,8 +23,11 @@ extension SKAction {
   }
 }
 
-let DurationPerAnimation = 10.0;
-let CrossFadeDuration = 1.0;
+let DurationPerAnimation = 10.0
+let CrossFadeDuration = 1.0
+let MinOscillateDuration = 2.0
+let OscillatePixelPerSecond = 30.0
+
 
 class PixelScene : SKView {
   private let urls: [URL]
@@ -53,6 +56,7 @@ class PixelScene : SKView {
         
         let pixelScene = self.scene!
         
+        pixelScene.removeAction(forKey: "nextGif")
         self.currentAspectRatio = gifResource!.size.width / gifResource!.size.height
         
         // insert to scene
@@ -85,7 +89,7 @@ class PixelScene : SKView {
           if (Double(time) >= DurationPerAnimation) {
             self.nextGif();
           }
-        }))
+        }), withKey: "nextGif")
       }
     }
     
@@ -129,7 +133,7 @@ class PixelScene : SKView {
     node.run(SKAction.repeatForever(
       SKAction.oscillation(direction: direction,
                            amplitude: overlap/2,
-                           timePeriod: 10.0,
+                           timePeriod: max(Double(overlap)/OscillatePixelPerSecond, MinOscillateDuration),
                            midPoint: node.position)),
                 withKey: "oscillate")
   }
