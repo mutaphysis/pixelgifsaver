@@ -1,6 +1,6 @@
 import ScreenSaver
 
-@objc
+@objc(PixelGifSaver)
 class PixelGifSaver: ScreenSaverView {
   public private(set) var pixelScene: PixelScene!;
   private var gifFileUrls: [URL]!;
