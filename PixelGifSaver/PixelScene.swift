@@ -156,6 +156,7 @@ class PixelScene : SKView {
     pixelScene.scaleMode = .resizeFill
     pixelScene.backgroundColor = SKColor.black
     
+    self.preferredFramesPerSecond = 30
     self.showsFPS = true
     self.presentScene(pixelScene)
     

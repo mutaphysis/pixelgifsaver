@@ -36,4 +36,21 @@ class PixelGifSaver: ScreenSaverView {
     absoluteUrls.shuffleInPlace()
     return absoluteUrls
   }
+  
+  var preferencesController: PreferencesWindowController?
+  
+  override var hasConfigureSheet: Bool { get {
+    return true
+    } }
+  
+  override var configureSheet: NSWindow? { get {
+    if let controller = preferencesController {
+      return controller.window
+    }
+    
+    let controller = PreferencesWindowController(windowNibName: NSNib.Name("PreferencesWindow"))
+    
+    preferencesController = controller
+    return controller.window
+    } }
 }
