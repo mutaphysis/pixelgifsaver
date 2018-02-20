@@ -85,12 +85,12 @@ class PixelScene : SKView {
         self.currentAnimationNode = gifNode
         self.isLoadingGif = false
         
-        let durationPerGif = max(MinDurationPerGif, 2 * oscillateAnimationDuration)
-        pixelScene.run(SKAction.customAction(withDuration: durationPerGif, actionBlock: { _, time in
-          if (Double(time) >= durationPerGif) {
+        let durationPerGif = max(MinDurationPerGif, oscillateAnimationDuration)
+        pixelScene.run(SKAction.sequence([
+          SKAction.wait(forDuration: durationPerGif),
+          SKAction.customAction(withDuration: durationPerGif, actionBlock: { _, _ in
             self.nextGif();
-          }
-        }), withKey: "nextGif")
+        })]), withKey: "nextGif")
       }
     }
     
@@ -101,7 +101,7 @@ class PixelScene : SKView {
     super.resize(withOldSuperviewSize: oldSize)
     
     if (self.currentAnimationNode != nil) {
-      resizeNode(node: self.currentAnimationNode!)
+      _ = resizeNode(node: self.currentAnimationNode!)
     }
   }
   
