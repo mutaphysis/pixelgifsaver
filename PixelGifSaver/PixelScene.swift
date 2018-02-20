@@ -23,7 +23,7 @@ extension SKAction {
   }
 }
 
-let DurationPerAnimation = 10.0
+let MinDurationPerGif = 30.0
 let CrossFadeDuration = 1.0
 let MinOscillateDuration = 2.0
 let OscillatePixelPerSecond = 30.0
@@ -66,7 +66,7 @@ class PixelScene : SKView {
         pixelScene.addChild(gifNode)
         
         // set size and scroll anim
-        self.resizeNode(node: gifNode)
+        let oscillateAnimationDuration = self.resizeNode(node: gifNode)
         
         // setup all animations on the node
         
@@ -85,8 +85,9 @@ class PixelScene : SKView {
         self.currentAnimationNode = gifNode
         self.isLoadingGif = false
         
-        pixelScene.run(SKAction.customAction(withDuration: DurationPerAnimation, actionBlock: { _, time in
-          if (Double(time) >= DurationPerAnimation) {
+        let durationPerGif = max(MinDurationPerGif, 2 * oscillateAnimationDuration)
+        pixelScene.run(SKAction.customAction(withDuration: durationPerGif, actionBlock: { _, time in
+          if (Double(time) >= durationPerGif) {
             self.nextGif();
           }
         }), withKey: "nextGif")
@@ -104,7 +105,7 @@ class PixelScene : SKView {
     }
   }
   
-  func resizeNode(node: SKSpriteNode) {
+  func resizeNode(node: SKSpriteNode) -> Double {
     let pixelScene = self.scene!
     
     // figure out how it fits best
@@ -129,13 +130,16 @@ class PixelScene : SKView {
     
     print("placing node scene:\(sceneSize) node:\(rectangleSize) overlap:\(overlap) aspect:\(aspectRatio) ")
     
+    let animationDuration = max(Double(overlap)/OscillatePixelPerSecond, MinOscillateDuration);
     node.removeAction(forKey: "oscillate")
     node.run(SKAction.repeatForever(
       SKAction.oscillation(direction: direction,
                            amplitude: overlap/2,
-                           timePeriod: max(Double(overlap)/OscillatePixelPerSecond, MinOscillateDuration),
+                           timePeriod: animationDuration,
                            midPoint: node.position)),
                 withKey: "oscillate")
+    
+    return animationDuration;
   }
   
   func nextGif() {
