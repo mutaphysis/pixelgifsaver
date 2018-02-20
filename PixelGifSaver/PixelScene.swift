@@ -14,9 +14,9 @@ extension SKAction {
     let action = SKAction.customAction(withDuration: t) { node, currentTime in
       let displacement = a * sin(2 * .pi * currentTime / CGFloat(t))
       if (direction == .vertical) {
-        node.position.y = midPoint.y + displacement
+        node.position.y = round(midPoint.y + displacement)
       } else {
-        node.position.x = midPoint.x + displacement
+        node.position.x = round(midPoint.x + displacement)
       }
     }
     return action
