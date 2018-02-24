@@ -109,26 +109,30 @@ class PixelScene : SKView {
     let pixelScene = self.scene!
     
     // figure out how it fits best
-    let aspectRatio = self.currentAspectRatio!
-    let direction = (aspectRatio > 1.0) ? AnimationDirection.horizontal : AnimationDirection.vertical
     let sceneSize = pixelScene.size
+    let contentAspectRatio = self.currentAspectRatio!
+    let sceneAspectRatio = sceneSize.width / sceneSize.height
+    let unscaledNodeSize = CGSize(width: node.size.width / node.xScale, height: node.size.height / node.yScale)
+    let direction = (contentAspectRatio > sceneAspectRatio) ?
+      AnimationDirection.horizontal :
+      AnimationDirection.vertical
     
     // determine size and movement
-    var rectangleSize: CGSize
+    var scale: CGFloat
     var overlap: CGFloat
     switch direction {
     case .horizontal:
-      rectangleSize = CGSize(width: sceneSize.width * aspectRatio, height: sceneSize.height)
-      overlap = rectangleSize.width - sceneSize.width
+      scale = sceneSize.height / unscaledNodeSize.height
+      node.setScale(scale)
+      overlap = node.size.width - sceneSize.width
     case .vertical:
-      rectangleSize = CGSize(width: sceneSize.width, height: sceneSize.height / aspectRatio)
-      overlap = rectangleSize.height - sceneSize.height
+      scale = sceneSize.width / unscaledNodeSize.width
+      node.setScale(scale)
+      overlap = node.size.height - sceneSize.height
     }
     
-    node.size = rectangleSize
     node.position = CGPoint(x: sceneSize.width/2, y: sceneSize.height/2)
-    
-    print("placing node scene:\(sceneSize) node:\(rectangleSize) overlap:\(overlap) aspect:\(aspectRatio) ")
+    print("placing node scene:\(sceneSize) node:\(node.size) scale:\(scale) overlap:\(overlap) contenAspect:\(contentAspectRatio) sceneAscpect:\(sceneAspectRatio)")
     
     let animationDuration = max(Double(overlap)/OscillatePixelPerSecond, MinOscillateDuration);
     node.removeAction(forKey: "oscillate")
