@@ -147,6 +147,11 @@ class PixelScene : SKView {
   }
   
   func nextGif() {
+    if (urls.count == 0) {
+      print("No gifs found")
+      return;
+    }
+    
     let nextIndex = (currentIndex + 1) % urls.count
     
     if (nextIndex < urls.count) {
