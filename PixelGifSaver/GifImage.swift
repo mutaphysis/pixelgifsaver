@@ -28,17 +28,18 @@ class GifImage {
       return nil
     }
     
+    let minimalFrameDuration = Float(0.075);
     var totalDuration : Float = 0
     var tmpDurations = [TimeInterval]()
     var tmpTextures = [SKTexture]()
     
     // loop through all frames
     for i in 0..<frameCount {
-      var frameDuration : Float = 0.1;
+      var frameDuration : Float = minimalFrameDuration;
       
       let cfFrameProperties = CGImageSourceCopyPropertiesAtIndex(src, i, nil)
-      guard let framePrpoerties = cfFrameProperties as? [String:AnyObject] else {return nil}
-      guard let gifProperties = framePrpoerties[kCGImagePropertyGIFDictionary as String] as? [String:AnyObject] else {
+      guard let frameProperties = cfFrameProperties as? [String:AnyObject] else {return nil}
+      guard let gifProperties = frameProperties[kCGImagePropertyGIFDictionary as String] as? [String:AnyObject] else {
         print("Failed collecting gif data for frame \(i) in \(url)")
         return nil
       }
@@ -49,13 +50,12 @@ class GifImage {
       } else {
         if let delayTimeProp = gifProperties[kCGImagePropertyGIFDelayTime as String] as? NSNumber {
           frameDuration = delayTimeProp.floatValue
-        }
+        } 
       }
       
       // ensure the individual frame duration is not to small
-      // TODO where do these values come from?
-      if frameDuration < 0.075 {
-        frameDuration = 0.075;
+      if frameDuration < minimalFrameDuration {
+        frameDuration = minimalFrameDuration;
       }
 
       // collect frames
